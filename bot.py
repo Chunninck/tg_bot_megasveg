@@ -27,7 +27,7 @@ async def start(update: Update, context):
 
 async def help_command(update: Update, context):
     await update.message.reply_text(
-        'Команды: \n/start - начать\n/help - помощь\n/about - обо мне\n/menu - меню с интерасктивными кнопочками'
+        'Команды: \n/start - начать\n/help - помощь\n/about - обо мне\n/menu - меню с интерактивными кнопочками'
     )
 
 async def about(update: Update, context):
@@ -41,11 +41,11 @@ async def handle_text(update: Update, context):
     text = update.message.text.lower()
 
     if 'привет' in text:
-        await update.message.reply_text('Привет! Как твои дела?')
+        await update.message.reply_text('Здарова, братуха, как житуха?')
     elif 'как дела' in text:
-        await update.message.reply_text('У меня всё отлично, спасибо!')
+        await update.message.reply_text('спасибо, потехончку.')
     elif 'пока' in text:
-        await update.message.reply_text('До встречи! Хорошего дня!')
+        await update.message.reply_text('удачи тебе, возвращайся потом.')
     elif 'помощь' in text:
         await update.message.reply_text('Если нужна помощь напишите /help')
     else:
@@ -75,28 +75,70 @@ async def button_callback(update: Update, context):
         facts = ['Коты спят до 16 часов в сутки.', 'Банан - это ягода, а не фрукт.', 'Скорость улитки около 0.05 км/ч.']
         await query.edit_message_text(f'Случайный факт: {random.choice(facts)}')
 
-async def send_photo(update, context):
+async def send_photo(update: Update, context):
     url = 'https://webcalypt.cloud/tools/meme-generator/104651'
     await update.message.reply_photo(url, caption='Шок контент')
 
-async def send_sticker(update, context):
+async def send_sticker(update: Update, context):
     sticker_id = 'CAACAgIAAxkBAAEX6PRq0zpe7S1ba9xttouPZ9LJSovjfAACC5gAAjn_aUnL2SmeV0TtVj0E'
     await update.message.reply_sticker(sticker_id)
 
-async def send_gif(update, context):
-    url = 'https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif'
-    await update.message.reply_animation(url, caption='это ты')
+async def send_gif(update: Update, context):
+    gif_id = 'CgACAgIAAxkBAAOUatx27WRcs0ejm-jUJzpWEmRltX4AAmx_AAI9YClJacOFdAWztk09BA'
+    await update.message.reply_animation(gif_id, caption='это ты')
+
+async def tomorrow(update: Update, context):
+    gif_id = 'CgACAgIAAxkBAAOWatx29UuT4Cd7Hk1Fb-C71ZF7s50AAicUAAKOgwABSfpx3VQqg6QmPQQ'
+    await update.message.reply_animation(gif_id, caption='Онет завтра в школу Т-Т')
+
+# ==========================================
+# НОВЫЕ ФУНКЦИИ ДЛЯ ПОЛУЧЕНИЯ ID
+# ==========================================
+
+async def handle_animation(update: Update, context):
+    """Выводит file_id гифки (анимации) в терминал и чат"""
+    if update.message and update.message.animation:
+        file_id = update.message.animation.file_id
+        print(f" ID ГИФКИ (Animation): {file_id}")
+        await update.message.reply_text(
+            f"ID гифки выведен в терминал!\nСкопируй его отсюда:\n`{file_id}`", 
+            parse_mode='Markdown'
+        )
+
+async def handle_sticker_id(update: Update, context):
+    """Выводит file_id стикера в терминал и чат"""
+    if update.message and update.message.sticker:
+        file_id = update.message.sticker.file_id
+        print(f" ID СТИКЕРА: {file_id}")
+        await update.message.reply_text(
+            f"ID стикера выведен в терминал!\nСкопируй его отсюда:\n`{file_id}`", 
+            parse_mode='Markdown'
+        )
+
+# ==========================================
 
 if __name__ == '__main__':
     print("Бот запущен. Нажмите Ctrl+C для остановки.")
     app = ApplicationBuilder().token(TOKEN).build()
+    
+    # Команды
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('about', about))
     app.add_handler(CommandHandler('menu', menu))
-    app.add_handler(CallbackQueryHandler(button_callback))
     app.add_handler(CommandHandler('photo', send_photo))
     app.add_handler(CommandHandler('sticker', send_sticker))
     app.add_handler(CommandHandler('gif', send_gif))
+    app.add_handler(CommandHandler('zavtra_v_shkolu', tomorrow))
+    
+    # Обработчики нажатий на кнопки
+    app.add_handler(CallbackQueryHandler(button_callback))
+    
+    # Обработчики текста
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+    
+    # НОВЫЕ ОБРАБОТЧИКИ: ловят гифки и стикеры, чтобы показать их ID
+    app.add_handler(MessageHandler(filters.ANIMATION, handle_animation))
+    app.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker_id))  # <-- ИСПРАВЛЕНО ЗДЕСЬ
+    
     app.run_polling()
